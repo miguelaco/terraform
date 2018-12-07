@@ -1,0 +1,7 @@
+cluster_id = "demo"
+num_of_masters = "3"
+num_of_private_agents = "1"
+num_of_public_agents = "1"
+num_of_gosecs = "3"
+azure_region = "West Europe"
+ssh_pub_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDDkYzPnd0ohGZ0gHmoVtepEHMfnDgDJsr8/1CH+ZlhTy/j+/bT5yE/Iz1ru9+t+iRZ5VQE/Mori3yihwCz9PJXX0fQrSmzKt+x9FPd6XTmXYMk8q0ZmhqPDsMyR3jpdRxM1wQE6Axyszw8NB7zfX8gFo1lf2A5tavp467bEyR81HwAkQeKBDEL8jEaNuqB+Kadab4zS9eAeelUFx3bJAWuDYaOiJgIDsIJdWNczpRmZzYmkEVy8laS3y8XAmLZ+fbnUr3j3LAo1/javLT7OY945VJ5OSPKyxcegphcGH6b2exv+6bvYGI8erV1yd4kWUoFF6tryvDyCZrFWbXe8iVL"
