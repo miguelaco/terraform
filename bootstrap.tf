@@ -91,7 +91,7 @@ resource "azurerm_virtual_machine" "bootstrap" {
 
     ssh_keys {
       path     = "/home/${var.os_username}/.ssh/authorized_keys"
-      key_data = "${var.ssh_pub_key}"
+      key_data = "${local.public_key}"
     }
   }
 
@@ -103,7 +103,7 @@ resource "azurerm_virtual_machine" "bootstrap" {
       type  = "ssh"
       user  = "${var.os_username}"
       host  = "${element(azurerm_public_ip.bootstrap.*.fqdn, count.index)}"
-      agent = true
+      private_key = "${local.private_key}"
     }
   }
 
@@ -117,7 +117,7 @@ resource "azurerm_virtual_machine" "bootstrap" {
       type  = "ssh"
       user  = "${var.os_username}"
       host  = "${element(azurerm_public_ip.bootstrap.*.fqdn, count.index)}"
-      agent = true
+      private_key = "${local.private_key}"
     }
   }
 }

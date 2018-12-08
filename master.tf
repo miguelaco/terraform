@@ -64,7 +64,7 @@ resource "azurerm_virtual_machine" "master" {
 
     ssh_keys {
       path     = "/home/${var.os_username}/.ssh/authorized_keys"
-      key_data = "${var.ssh_pub_key}"
+      key_data = "${local.public_key}"
     }
   }
 
@@ -77,7 +77,7 @@ resource "azurerm_virtual_machine" "master" {
       user         = "${var.os_username}"
       host         = "${element(azurerm_network_interface.master.*.private_ip_address, count.index)}"
       bastion_host = "${azurerm_public_ip.bootstrap.fqdn}"
-      agent        = true
+      private_key = "${local.private_key}"
     }
   }
 
@@ -92,7 +92,7 @@ resource "azurerm_virtual_machine" "master" {
       user         = "${var.os_username}"
       host         = "${element(azurerm_network_interface.master.*.private_ip_address, count.index)}"
       bastion_host = "${azurerm_public_ip.bootstrap.fqdn}"
-      agent        = true
+      private_key = "${local.private_key}"
     }
   }
 }

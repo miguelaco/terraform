@@ -1,3 +1,8 @@
+locals {
+  private_key = "${file("./secrets/${var.cluster_id}")}"
+  public_key = "${file("./secrets/${var.cluster_id}.pub")}"
+}
+
 resource "azurerm_resource_group" "eos" {
   name     = "${var.cluster_id}"
   location = "${var.azure_region}"

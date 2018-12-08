@@ -2,10 +2,6 @@ variable "cluster_id" {
   description = "The cluster ID."
 }
 
-variable "ssh_pub_key" {
-  description = "The Public SSH Key associated with your instances for login. Copy your own key from your machine when deploying to log into your instance."
-}
-
 variable "os_username" {
   description = "Username of the OS."
   default     = "operador"
