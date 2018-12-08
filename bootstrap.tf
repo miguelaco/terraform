@@ -100,9 +100,9 @@ resource "azurerm_virtual_machine" "bootstrap" {
     destination = "/tmp/setup.sh"
 
     connection {
-      type  = "ssh"
-      user  = "${var.os_username}"
-      host  = "${element(azurerm_public_ip.bootstrap.*.fqdn, count.index)}"
+      type        = "ssh"
+      user        = "${var.os_username}"
+      host        = "${element(azurerm_public_ip.bootstrap.*.fqdn, count.index)}"
       private_key = "${local.private_key}"
     }
   }
@@ -114,9 +114,9 @@ resource "azurerm_virtual_machine" "bootstrap" {
     ]
 
     connection {
-      type  = "ssh"
-      user  = "${var.os_username}"
-      host  = "${element(azurerm_public_ip.bootstrap.*.fqdn, count.index)}"
+      type        = "ssh"
+      user        = "${var.os_username}"
+      host        = "${element(azurerm_public_ip.bootstrap.*.fqdn, count.index)}"
       private_key = "${local.private_key}"
     }
   }

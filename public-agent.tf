@@ -77,7 +77,7 @@ resource "azurerm_virtual_machine" "public_agent" {
       user         = "${var.os_username}"
       host         = "${element(azurerm_network_interface.public_agent.*.private_ip_address, count.index)}"
       bastion_host = "${azurerm_public_ip.bootstrap.fqdn}"
-      private_key = "${local.private_key}"
+      private_key  = "${local.private_key}"
     }
   }
 
@@ -92,7 +92,7 @@ resource "azurerm_virtual_machine" "public_agent" {
       user         = "${var.os_username}"
       host         = "${element(azurerm_network_interface.public_agent.*.private_ip_address, count.index)}"
       bastion_host = "${azurerm_public_ip.bootstrap.fqdn}"
-      private_key = "${local.private_key}"
+      private_key  = "${local.private_key}"
     }
   }
 }
