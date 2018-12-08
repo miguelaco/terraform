@@ -1,8 +1,8 @@
 resource "azurerm_managed_disk" "gosec" {
   count                = "${var.num_of_gosecs}"
-  name                 = "gosec-managed-disk-${var.cluster_id}-${count.index + 1}"
-  location             = "${var.azure_region}"
-  resource_group_name  = "${azurerm_resource_group.eos.name}"
+  name                 = "gosec-${count.index + 1}-managed-disk"
+  location             = "${var.region}"
+  resource_group_name  = "${azurerm_resource_group.rg.name}"
   storage_account_type = "Standard_LRS"
   create_option        = "Empty"
   disk_size_gb         = "${var.instance_disk_size}"
@@ -10,25 +10,25 @@ resource "azurerm_managed_disk" "gosec" {
 
 resource "azurerm_network_interface" "gosec" {
   count                = "${var.num_of_gosecs}"
-  name                 = "gosec-nic-${var.cluster_id}-${count.index + 1}"
-  location             = "${var.azure_region}"
-  resource_group_name  = "${azurerm_resource_group.eos.name}"
+  name                 = "gosec-${count.index + 1}-nic"
+  location             = "${var.region}"
+  resource_group_name  = "${azurerm_resource_group.rg.name}"
   enable_ip_forwarding = true
 
   ip_configuration {
-    name                          = "gosec-ip-config-${var.cluster_id}-${count.index + 1}"
-    subnet_id                     = "${azurerm_subnet.eos.id}"
+    name                          = "gosec-${count.index + 1}-ip-config"
+    subnet_id                     = "${azurerm_subnet.subnet.id}"
     private_ip_address_allocation = "dynamic"
   }
 }
 
 resource "azurerm_virtual_machine" "gosec" {
   count                            = "${var.num_of_gosecs}"
-  name                             = "gosec-${var.cluster_id}-${count.index + 1}"
-  location                         = "${var.azure_region}"
-  resource_group_name              = "${azurerm_resource_group.eos.name}"
+  name                             = "gosec-${count.index + 1}"
+  location                         = "${var.region}"
+  resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.gosec.*.id[count.index]}"]
-  vm_size                          = "${var.azure_gosec_instance_type}"
+  vm_size                          = "${var.gosec_instance_type}"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 
@@ -40,7 +40,7 @@ resource "azurerm_virtual_machine" "gosec" {
   }
 
   storage_os_disk {
-    name              = "gosec-os-disk-${var.cluster_id}-${count.index + 1}"
+    name              = "gosec-${count.index + 1}-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"

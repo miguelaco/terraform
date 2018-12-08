@@ -1,24 +1,24 @@
 resource "azurerm_managed_disk" "bootstrap" {
-  name                 = "bootstrap-managed-disk-${var.cluster_id}"
-  location             = "${var.azure_region}"
-  resource_group_name  = "${azurerm_resource_group.eos.name}"
+  name                 = "bootstrap-managed-disk"
+  location             = "${var.region}"
+  resource_group_name  = "${azurerm_resource_group.rg.name}"
   storage_account_type = "Standard_LRS"
   create_option        = "Empty"
   disk_size_gb         = "${var.instance_disk_size}"
 }
 
 resource "azurerm_public_ip" "bootstrap" {
-  name                         = "bootstrap-public-ip-${var.cluster_id}"
-  location                     = "${var.azure_region}"
-  resource_group_name          = "${azurerm_resource_group.eos.name}"
+  name                         = "bootstrap-public-ip"
+  location                     = "${var.region}"
+  resource_group_name          = "${azurerm_resource_group.rg.name}"
   public_ip_address_allocation = "dynamic"
   domain_name_label            = "bootstrap-${var.cluster_id}"
 }
 
 resource "azurerm_network_security_group" "bootstrap" {
-  name                = "security-group-bootstrap-${var.cluster_id}"
-  location            = "${var.azure_region}"
-  resource_group_name = "${azurerm_resource_group.eos.name}"
+  name                = "security-group-bootstrap"
+  location            = "${var.region}"
+  resource_group_name = "${azurerm_resource_group.rg.name}"
 }
 
 resource "azurerm_network_security_rule" "allow-ssh-inbound" {
@@ -31,31 +31,31 @@ resource "azurerm_network_security_rule" "allow-ssh-inbound" {
   destination_port_range      = "22"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
-  resource_group_name         = "${azurerm_resource_group.eos.name}"
+  resource_group_name         = "${azurerm_resource_group.rg.name}"
   network_security_group_name = "${azurerm_network_security_group.bootstrap.name}"
 }
 
 resource "azurerm_network_interface" "bootstrap" {
-  name                      = "bootstrap-nic-${var.cluster_id}"
-  location                  = "${var.azure_region}"
-  resource_group_name       = "${azurerm_resource_group.eos.name}"
+  name                      = "bootstrap-nic"
+  location                  = "${var.region}"
+  resource_group_name       = "${azurerm_resource_group.rg.name}"
   network_security_group_id = "${azurerm_network_security_group.bootstrap.id}"
   enable_ip_forwarding      = true
 
   ip_configuration {
-    name                          = "bootstrap-ip-config-${var.cluster_id}"
-    subnet_id                     = "${azurerm_subnet.eos.id}"
+    name                          = "bootstrap-ip-config"
+    subnet_id                     = "${azurerm_subnet.subnet.id}"
     private_ip_address_allocation = "dynamic"
     public_ip_address_id          = "${azurerm_public_ip.bootstrap.id}"
   }
 }
 
 resource "azurerm_virtual_machine" "bootstrap" {
-  name                             = "bootstrap-${var.cluster_id}"
-  location                         = "${var.azure_region}"
-  resource_group_name              = "${azurerm_resource_group.eos.name}"
+  name                             = "bootstrap"
+  location                         = "${var.region}"
+  resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.bootstrap.id}"]
-  vm_size                          = "${var.azure_bootstrap_instance_type}"
+  vm_size                          = "${var.bootstrap_instance_type}"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 
@@ -67,7 +67,7 @@ resource "azurerm_virtual_machine" "bootstrap" {
   }
 
   storage_os_disk {
-    name              = "bootstrap-os-disk-${var.cluster_id}"
+    name              = "bootstrap-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"

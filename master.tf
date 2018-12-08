@@ -1,8 +1,8 @@
 resource "azurerm_managed_disk" "master" {
   count                = "${var.num_of_masters}"
-  name                 = "master-managed-disk-${var.cluster_id}-${count.index + 1}"
-  location             = "${var.azure_region}"
-  resource_group_name  = "${azurerm_resource_group.eos.name}"
+  name                 = "master-${count.index + 1}-managed-disk"
+  location             = "${var.region}"
+  resource_group_name  = "${azurerm_resource_group.rg.name}"
   storage_account_type = "Standard_LRS"
   create_option        = "Empty"
   disk_size_gb         = "${var.instance_disk_size}"
@@ -10,25 +10,25 @@ resource "azurerm_managed_disk" "master" {
 
 resource "azurerm_network_interface" "master" {
   count                = "${var.num_of_masters}"
-  name                 = "master-nic-${var.cluster_id}-${count.index + 1}"
-  location             = "${var.azure_region}"
-  resource_group_name  = "${azurerm_resource_group.eos.name}"
+  name                 = "master-${count.index + 1}-nic"
+  location             = "${var.region}"
+  resource_group_name  = "${azurerm_resource_group.rg.name}"
   enable_ip_forwarding = true
 
   ip_configuration {
-    name                          = "master-ip-config-${var.cluster_id}-${count.index + 1}"
-    subnet_id                     = "${azurerm_subnet.eos.id}"
+    name                          = "master-${count.index + 1}-ip-config"
+    subnet_id                     = "${azurerm_subnet.subnet.id}"
     private_ip_address_allocation = "dynamic"
   }
 }
 
 resource "azurerm_virtual_machine" "master" {
   count                            = "${var.num_of_masters}"
-  name                             = "master-${var.cluster_id}-${count.index + 1}"
-  location                         = "${var.azure_region}"
-  resource_group_name              = "${azurerm_resource_group.eos.name}"
+  name                             = "master-${count.index + 1}"
+  location                         = "${var.region}"
+  resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.master.*.id[count.index]}"]
-  vm_size                          = "${var.azure_master_instance_type}"
+  vm_size                          = "${var.master_instance_type}"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 
@@ -40,7 +40,7 @@ resource "azurerm_virtual_machine" "master" {
   }
 
   storage_os_disk {
-    name              = "master-os-disk-${var.cluster_id}-${count.index + 1}"
+    name              = "master-${count.index + 1}-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"

@@ -1,8 +1,8 @@
 resource "azurerm_managed_disk" "public_agent" {
   count                = "${var.num_of_public_agents}"
-  name                 = "public-agent-managed-disk-${var.cluster_id}-${count.index + 1}"
-  location             = "${var.azure_region}"
-  resource_group_name  = "${azurerm_resource_group.eos.name}"
+  name                 = "public-agent-${count.index + 1}-managed-disk"
+  location             = "${var.region}"
+  resource_group_name  = "${azurerm_resource_group.rg.name}"
   storage_account_type = "Standard_LRS"
   create_option        = "Empty"
   disk_size_gb         = "${var.instance_disk_size}"
@@ -10,25 +10,25 @@ resource "azurerm_managed_disk" "public_agent" {
 
 resource "azurerm_network_interface" "public_agent" {
   count                = "${var.num_of_public_agents}"
-  name                 = "public-agent-nic-${var.cluster_id}-${count.index + 1}"
-  location             = "${var.azure_region}"
-  resource_group_name  = "${azurerm_resource_group.eos.name}"
+  name                 = "public-agent-${count.index + 1}-nic"
+  location             = "${var.region}"
+  resource_group_name  = "${azurerm_resource_group.rg.name}"
   enable_ip_forwarding = true
 
   ip_configuration {
-    name                          = "public-agent-ip-config-${var.cluster_id}-${count.index + 1}"
-    subnet_id                     = "${azurerm_subnet.eos.id}"
+    name                          = "public-agent-${count.index + 1}-ip-config"
+    subnet_id                     = "${azurerm_subnet.subnet.id}"
     private_ip_address_allocation = "dynamic"
   }
 }
 
 resource "azurerm_virtual_machine" "public_agent" {
   count                            = "${var.num_of_public_agents}"
-  name                             = "public-agent-${var.cluster_id}-${count.index + 1}"
-  location                         = "${var.azure_region}"
-  resource_group_name              = "${azurerm_resource_group.eos.name}"
+  name                             = "public-agent-${count.index + 1}"
+  location                         = "${var.region}"
+  resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.public_agent.*.id[count.index]}"]
-  vm_size                          = "${var.azure_public_agent_instance_type}"
+  vm_size                          = "${var.public_agent_instance_type}"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 
@@ -40,7 +40,7 @@ resource "azurerm_virtual_machine" "public_agent" {
   }
 
   storage_os_disk {
-    name              = "public-agent-os-disk-${var.cluster_id}-${count.index + 1}"
+    name              = "public-agent-${count.index + 1}-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
