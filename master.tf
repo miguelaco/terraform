@@ -22,6 +22,13 @@ resource "azurerm_network_interface" "master" {
   }
 }
 
+resource "azurerm_network_interface_backend_address_pool_association" "master_nic_backend_pool" {
+  count                   = "${var.num_of_masters}"
+  network_interface_id    = "${azurerm_network_interface.master.*.id[count.index]}"
+  ip_configuration_name   = "master-${count.index + 1}-ip-config"
+  backend_address_pool_id = "${azurerm_lb_backend_address_pool.master_backend_pool.id}"
+}
+
 resource "azurerm_virtual_machine" "master" {
   count                            = "${var.num_of_masters}"
   name                             = "master-${count.index + 1}"

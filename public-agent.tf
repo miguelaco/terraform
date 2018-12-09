@@ -22,6 +22,13 @@ resource "azurerm_network_interface" "public_agent" {
   }
 }
 
+resource "azurerm_network_interface_backend_address_pool_association" "public_agent_nic_backend_pool" {
+  count                   = "${var.num_of_public_agents}"
+  network_interface_id    = "${azurerm_network_interface.public_agent.*.id[count.index]}"
+  ip_configuration_name   = "public-agent-${count.index + 1}-ip-config"
+  backend_address_pool_id = "${azurerm_lb_backend_address_pool.public_agent_backend_pool.id}"
+}
+
 resource "azurerm_virtual_machine" "public_agent" {
   count                            = "${var.num_of_public_agents}"
   name                             = "public-agent-${count.index + 1}"
