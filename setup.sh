@@ -1,5 +1,9 @@
 #!/bin/bash
 
+command -v ssh-keygen > /dev/null 2>&1 || { echo >&2 "ssh-keygen required but not found"; exit 1; }
+command -v terraform > /dev/null 2>&1 || { echo >&2 "terraform required but not found (https://www.terraform.io/downloads.html)"; exit 1; }
+command -v az > /dev/null 2>&1 || { echo >&2 "azure-cli required but not found (https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)"; exit 1; }
+
 DEFAULT_NUM_OF_MASTERS=3
 DEFAULT_NUM_OF_PUBLIC_AGENTS=1
 DEFAULT_NUM_OF_PRIVATE_AGENTS=5
@@ -58,6 +62,7 @@ private_agent_instance_type = "$PRIVATE_AGENT_INSTANCE_TYPE"
 EOF
 
 echo "---------------------------------------------"
+mkdir ./secrets
 ssh-keygen -f ./secrets/$CLUSTER_ID -t rsa -N '' -C $CLUSTER_ID
 
 echo "---------------------------------------------"
