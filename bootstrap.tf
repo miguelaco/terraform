@@ -2,7 +2,7 @@ resource "azurerm_managed_disk" "bootstrap" {
   name                 = "bootstrap-managed-disk"
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
-  storage_account_type = "Standard_LRS"
+  storage_account_type = "StandardSSD_LRS"
   create_option        = "Empty"
   disk_size_gb         = "${var.instance_disk_size}"
 }
@@ -70,7 +70,7 @@ resource "azurerm_virtual_machine" "bootstrap" {
     name              = "bootstrap-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
+    managed_disk_type = "StandardSSD_LRS"
   }
 
   storage_data_disk {
