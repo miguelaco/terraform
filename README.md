@@ -44,7 +44,7 @@ This will create a new app registration with permission to create resources.
 
 ```
 az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/<subscription_id_2>" --name "terraform"
-Changing "terraform2" to a valid URI of "http://terraform2", which is the required format used for service principal names
+Changing "terraform" to a valid URI of "http://terraform", which is the required format used for service principal names
 Retrying role assignment creation: 1/36
 {
   "appId": "<app_id>",
