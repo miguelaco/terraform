@@ -1,10 +1,3 @@
-terraform {
-  backend "azurerm" {
-    container_name = "tfstate"
-    storage_account_name = "stratio27632"
-  }
-}
-
 locals {
   private_key = "${file("./secrets/${var.cluster_id}")}"
   public_key  = "${file("./secrets/${var.cluster_id}.pub")}"

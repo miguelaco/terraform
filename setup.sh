@@ -1,8 +1,8 @@
 #!/bin/bash
 
-command -v ssh-keygen > /dev/null 2>&1 || { echo >&2 "ssh-keygen required but not found"; exit 1; }
-command -v terraform > /dev/null 2>&1 || { echo >&2 "terraform required but not found (https://www.terraform.io/downloads.html)"; exit 1; }
-command -v az > /dev/null 2>&1 || { echo >&2 "azure-cli required but not found (https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)"; exit 1; }
+command -v ssh-keygen > /dev/null 2>&1 || { echo >&2 "ssh-keygen required but not found"; return 1; }
+command -v terraform > /dev/null 2>&1 || { echo >&2 "terraform required but not found (https://www.terraform.io/downloads.html)"; return 1; }
+command -v az > /dev/null 2>&1 || { echo >&2 "azure-cli required but not found (https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)"; return 1; }
 
 bold=$(tput bold)
 normal=$(tput sgr0)
@@ -16,22 +16,47 @@ function setup_state_backend {
 	STORAGE_ACCOUNT_NAME=stratio$RANDOM
 	CONTAINER_NAME=tfstate
 
-	# Create resource group
-	az group create --name $RESOURCE_GROUP_NAME --location westeurope
+	az group create --name $RESOURCE_GROUP_NAME --location westeurope > /dev/null
+	if [ $? -ne 0 ]
+	then
+		return 1
+	fi
+	echo "Resource group $RESOURCE_GROUP_NAME created"
 
-	# Create storage account
-	az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob
+	az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob > /dev/null
+	if [ $? -ne 0 ]
+	then
+		return 1
+	fi
+	echo "Storage account $STORAGE_ACCOUNT_NAME created"
 
-	# Get storage account key
-	ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query [0].value -o tsv)
+	ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
+	if [ $? -ne 0 ]
+	then
+		return 1
+	fi
 
-	# Create blob container
-	az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --account-key $ACCOUNT_KEY
+	az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --account-key $ACCOUNT_KEY > /dev/null
+	if [ $? -ne 0 ]
+	then
+		return 1
+	fi
+	echo "Container $CONTAINER_NAME created"
 
+	export ACCOUNT_KEY
 
-	echo "storage_account_name: $STORAGE_ACCOUNT_NAME"
-	echo "container_name: $CONTAINER_NAME"
-	echo "access_key: $ACCOUNT_KEY"
+	cat <<-EOS > ./backend.tf
+		terraform {
+		  backend "azurerm" {
+		    resource_group_name  = "$RESOURCE_GROUP_NAME"
+		    storage_account_name = "$STORAGE_ACCOUNT_NAME"
+		    container_name       = "$CONTAINER_NAME"
+		    key                  = "tfstate"
+		    access_key           = "$ACCOUNT_KEY"
+		  }
+		}
+	EOS
+
 }
 
 function setup_configuration {
@@ -96,20 +121,20 @@ echo " Setup state backend"
 echo "---------------------------------------------"
 setup_state_backend
 
-echo "---------------------------------------------"
-echo " Setup configuration"
-echo "---------------------------------------------"
-setup_configuration
-
-echo "---------------------------------------------"
-echo " Generate SSH keypair"
-echo "---------------------------------------------"
-generate_ssh_keypair
-
-echo "---------------------------------------------"
-echo " Terraform init"
-echo "---------------------------------------------"
-terraform init
-
-echo "---------------------------------------------"
-echo "Successfully initialized, you can further customize your infrastructure editing terraform.tfvars"
+#echo "---------------------------------------------"
+#echo " Setup configuration"
+#echo "---------------------------------------------"
+#setup_configuration
+#
+#echo "---------------------------------------------"
+#echo " Generate SSH keypair"
+#echo "---------------------------------------------"
+#generate_ssh_keypair
+#
+#echo "---------------------------------------------"
+#echo " Terraform init"
+#echo "---------------------------------------------"
+#terraform init
+#
+#echo "---------------------------------------------"
+#echo "Successfully initialized, you can further customize your infrastructure editing terraform.tfvars"
