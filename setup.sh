@@ -7,14 +7,34 @@ command -v az > /dev/null 2>&1 || { echo >&2 "azure-cli required but not found (
 bold=$(tput bold)
 normal=$(tput sgr0)
 
+DEFAULT_NUM_OF_MASTERS=3
+DEFAULT_NUM_OF_PUBLIC_AGENTS=1
+DEFAULT_NUM_OF_PRIVATE_AGENTS=5
+
+DEFAULT_BOOTSTRAP_INSTANCE_TYPE=Standard_D2s_v3
+DEFAULT_MASTER_INSTANCE_TYPE=Standard_D4s_v3
+DEFAULT_GOSEC_INSTANCE_TYPE=Standard_D4s_v3
+DEFAULT_PUBLIC_AGENT_INSTANCE_TYPE=Standard_D2s_v3
+DEFAULT_PRIVATE_AGENT_INSTANCE_TYPE=Standard_D4s_v3
+
+RESOURCE_GROUP_NAME=terraform
+STORAGE_ACCOUNT_NAME=stratio$RANDOM
+CONTAINER_NAME=tfstate
+
 #while read -p 'Enter something: ' TEST && [[ -z "$TEST" ]] ; do
 # echo "Provide y or n!"
 #done
 
 function setup_state_backend {
-	RESOURCE_GROUP_NAME=terraform
-	STORAGE_ACCOUNT_NAME=stratio$RANDOM
-	CONTAINER_NAME=tfstate
+
+	if [ -f ./backend.tf ]
+	then
+		if [ ! $RESET_BACKEND ]
+		then
+			echo "Backend already initialized, ${bold}backend.tf${normal} exists"
+			return 1
+		fi
+	fi
 
 	az group create --name $RESOURCE_GROUP_NAME --location westeurope > /dev/null
 	if [ $? -ne 0 ]
@@ -60,15 +80,14 @@ function setup_state_backend {
 }
 
 function setup_configuration {
-	DEFAULT_NUM_OF_MASTERS=3
-	DEFAULT_NUM_OF_PUBLIC_AGENTS=1
-	DEFAULT_NUM_OF_PRIVATE_AGENTS=5
-
-	DEFAULT_BOOTSTRAP_INSTANCE_TYPE=Standard_D2s_v3
-	DEFAULT_MASTER_INSTANCE_TYPE=Standard_D4s_v3
-	DEFAULT_GOSEC_INSTANCE_TYPE=Standard_D4s_v3
-	DEFAULT_PUBLIC_AGENT_INSTANCE_TYPE=Standard_D2s_v3
-	DEFAULT_PRIVATE_AGENT_INSTANCE_TYPE=Standard_D4s_v3
+	if [ -f ./terraform.tfvars ]
+	then
+		if [ ! $RESET_CONFIG ]
+		then
+			echo "Configuration already initialized, ${bold}terraform.tfvars${normal} exists"
+			return 1
+		fi
+	fi
 
 	read -p "Enter your ${bold}cluster name${normal}: " CLUSTER_ID
 
@@ -97,7 +116,7 @@ function setup_configuration {
 	PRIVATE_AGENT_INSTANCE_TYPE=${PRIVATE_AGENT_INSTANCE_TYPE:-$DEFAULT_PRIVATE_AGENT_INSTANCE_TYPE}
 
 	echo "Creating $CLUSTER_ID.tfvars:"
-	tee ./$CLUSTER_ID.tfvars <<-EOF
+	tee ./terraform.tfvars <<-EOF
 		cluster_id = "$CLUSTER_ID"
 		num_of_masters = "$NUM_OF_MASTERS"
 		num_of_public_agents = "$NUM_OF_PUBLIC_AGENTS"
@@ -112,8 +131,8 @@ function setup_configuration {
 
 function generate_ssh_keypair {
 	echo "---------------------------------------------"
-	mkdir ./secrets
-	ssh-keygen -f ./secrets/$CLUSTER_ID -t rsa -N '' -C $CLUSTER_ID
+	mkdir -p ./secrets
+	ssh-keygen -q -f ./secrets/key -t rsa -N '' -C key
 }
 
 echo "---------------------------------------------"
@@ -121,20 +140,20 @@ echo " Setup state backend"
 echo "---------------------------------------------"
 setup_state_backend
 
-#echo "---------------------------------------------"
-#echo " Setup configuration"
-#echo "---------------------------------------------"
-#setup_configuration
-#
-#echo "---------------------------------------------"
-#echo " Generate SSH keypair"
-#echo "---------------------------------------------"
-#generate_ssh_keypair
-#
-#echo "---------------------------------------------"
-#echo " Terraform init"
-#echo "---------------------------------------------"
-#terraform init
-#
-#echo "---------------------------------------------"
-#echo "Successfully initialized, you can further customize your infrastructure editing terraform.tfvars"
+echo "---------------------------------------------"
+echo " Setup configuration"
+echo "---------------------------------------------"
+setup_configuration
+
+echo "---------------------------------------------"
+echo " Generate SSH keypair"
+echo "---------------------------------------------"
+generate_ssh_keypair
+
+echo "---------------------------------------------"
+echo " Terraform init"
+echo "---------------------------------------------"
+terraform init
+
+echo "---------------------------------------------"
+echo "Successfully initialized, you can further customize your infrastructure editing terraform.tfvars"
