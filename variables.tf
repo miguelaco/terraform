@@ -37,6 +37,11 @@ variable "bootstrap_instance_type" {
   default     = "Standard_D2s_v3"
 }
 
+variable "hdfs_instance_type" {
+  description = "Azure HDFS instance type"
+  default     = "Standard_D4s_v3"
+}
+
 variable "num_of_private_agents" {
   description = "DC/OS Private Agents Count"
   default     = 2
@@ -57,6 +62,11 @@ variable "num_of_gosecs" {
   default     = 3
 }
 
+variable "num_of_hdfs" {
+  description = "HDFS Nodes Count"
+  default     = 1
+}
+
 #variable "ip-detect" {
 # description = "Used to determine the private IP address of instances"
 # type = "map"
@@ -70,4 +80,34 @@ variable "num_of_gosecs" {
 variable "instance_disk_size" {
   description = "Default size of the root disk (GB)"
   default     = "128"
+}
+
+variable "bootstrap_name_prefix" {
+  description = "Bootstrap name prefix"
+  default     = "bootstrap"
+}
+
+variable "master_name_prefix" {
+  description = "Master name prefix"
+  default     = "master"
+}
+
+variable "gosec_name_prefix" {
+  description = "Gosec name prefix"
+  default     = "gosec"
+}
+
+variable "public_agent_name_prefix" {
+  description = "Master name prefix"
+  default     = "public-agent"
+}
+
+variable "private_agent_name_prefix" {
+  description = "Master name prefix"
+  default     = "private-agent"
+}
+
+variable "hdfs_name_prefix" {
+  description = "HDFS name prefix"
+  default     = "hdfs"
 }

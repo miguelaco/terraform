@@ -1,6 +1,6 @@
-resource "azurerm_managed_disk" "gosec" {
-  count                = "${var.num_of_gosecs}"
-  name                 = "${var.gosec_name_prefix}${count.index + 1}-managed-disk"
+resource "azurerm_managed_disk" "hdfs" {
+  count                = "${var.num_of_hdfs}"
+  name                 = "${var.hdfs_name_prefix}${count.index + 1}-managed-disk"
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   storage_account_type = "StandardSSD_LRS"
@@ -8,27 +8,27 @@ resource "azurerm_managed_disk" "gosec" {
   disk_size_gb         = "${var.instance_disk_size}"
 }
 
-resource "azurerm_network_interface" "gosec" {
-  count                = "${var.num_of_gosecs}"
-  name                 = "${var.gosec_name_prefix}${count.index + 1}-nic"
+resource "azurerm_network_interface" "hdfs" {
+  count                = "${var.num_of_hdfs}"
+  name                 = "${var.hdfs_name_prefix}${count.index + 1}-nic"
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   enable_ip_forwarding = true
 
   ip_configuration {
-    name                          = "${var.gosec_name_prefix}${count.index + 1}-ip-config"
+    name                          = "${var.hdfs_name_prefix}${count.index + 1}-ip-config"
     subnet_id                     = "${azurerm_subnet.subnet.id}"
     private_ip_address_allocation = "dynamic"
   }
 }
 
-resource "azurerm_virtual_machine" "gosec" {
-  count                            = "${var.num_of_gosecs}"
-  name                             = "${var.gosec_name_prefix}${count.index + 1}"
+resource "azurerm_virtual_machine" "hdfs" {
+  count                            = "${var.num_of_hdfs}"
+  name                             = "${var.hdfs_name_prefix}${count.index + 1}"
   location                         = "${var.region}"
   resource_group_name              = "${azurerm_resource_group.rg.name}"
-  network_interface_ids            = ["${azurerm_network_interface.gosec.*.id[count.index]}"]
-  vm_size                          = "${var.gosec_instance_type}"
+  network_interface_ids            = ["${azurerm_network_interface.hdfs.*.id[count.index]}"]
+  vm_size                          = "${var.hdfs_instance_type}"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 
@@ -40,22 +40,22 @@ resource "azurerm_virtual_machine" "gosec" {
   }
 
   storage_os_disk {
-    name              = "${var.gosec_name_prefix}${count.index + 1}-os-disk"
+    name              = "${var.hdfs_name_prefix}${count.index + 1}-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "StandardSSD_LRS"
   }
 
   storage_data_disk {
-    name            = "${azurerm_managed_disk.gosec.*.name[count.index]}"
-    managed_disk_id = "${azurerm_managed_disk.gosec.*.id[count.index]}"
+    name            = "${azurerm_managed_disk.hdfs.*.name[count.index]}"
+    managed_disk_id = "${azurerm_managed_disk.hdfs.*.id[count.index]}"
     create_option   = "Attach"
     lun             = 0
-    disk_size_gb    = "${azurerm_managed_disk.gosec.*.disk_size_gb[count.index]}"
+    disk_size_gb    = "${azurerm_managed_disk.hdfs.*.disk_size_gb[count.index]}"
   }
 
   os_profile {
-    computer_name  = "${var.gosec_name_prefix}${count.index + 1}"
+    computer_name  = "${var.hdfs_name_prefix}${count.index + 1}"
     admin_username = "${var.os_username}"
   }
 
@@ -75,7 +75,7 @@ resource "azurerm_virtual_machine" "gosec" {
     connection {
       type         = "ssh"
       user         = "${var.os_username}"
-      host         = "${element(azurerm_network_interface.gosec.*.private_ip_address, count.index)}"
+      host         = "${element(azurerm_network_interface.hdfs.*.private_ip_address, count.index)}"
       bastion_host = "${azurerm_public_ip.bootstrap.fqdn}"
       private_key  = "${local.private_key}"
     }
@@ -90,7 +90,7 @@ resource "azurerm_virtual_machine" "gosec" {
     connection {
       type         = "ssh"
       user         = "${var.os_username}"
-      host         = "${element(azurerm_network_interface.gosec.*.private_ip_address, count.index)}"
+      host         = "${element(azurerm_network_interface.hdfs.*.private_ip_address, count.index)}"
       bastion_host = "${azurerm_public_ip.bootstrap.fqdn}"
       private_key  = "${local.private_key}"
     }

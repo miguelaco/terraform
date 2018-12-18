@@ -1,5 +1,5 @@
 resource "azurerm_managed_disk" "bootstrap" {
-  name                 = "bootstrap-managed-disk"
+  name                 = "${var.bootstrap_name_prefix}-managed-disk"
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   storage_account_type = "StandardSSD_LRS"
@@ -8,7 +8,7 @@ resource "azurerm_managed_disk" "bootstrap" {
 }
 
 resource "azurerm_public_ip" "bootstrap" {
-  name                         = "bootstrap-public-ip"
+  name                         = "${var.bootstrap_name_prefix}-public-ip"
   location                     = "${var.region}"
   resource_group_name          = "${azurerm_resource_group.rg.name}"
   public_ip_address_allocation = "dynamic"
@@ -36,14 +36,14 @@ resource "azurerm_network_security_rule" "allow-ssh-inbound" {
 }
 
 resource "azurerm_network_interface" "bootstrap" {
-  name                      = "bootstrap-nic"
+  name                      = "${var.bootstrap_name_prefix}-nic"
   location                  = "${var.region}"
   resource_group_name       = "${azurerm_resource_group.rg.name}"
   network_security_group_id = "${azurerm_network_security_group.bootstrap.id}"
   enable_ip_forwarding      = true
 
   ip_configuration {
-    name                          = "bootstrap-ip-config"
+    name                          = "${var.bootstrap_name_prefix}-ip-config"
     subnet_id                     = "${azurerm_subnet.subnet.id}"
     private_ip_address_allocation = "dynamic"
     public_ip_address_id          = "${azurerm_public_ip.bootstrap.id}"
@@ -51,7 +51,7 @@ resource "azurerm_network_interface" "bootstrap" {
 }
 
 resource "azurerm_virtual_machine" "bootstrap" {
-  name                             = "bootstrap"
+  name                             = "${var.bootstrap_name_prefix}"
   location                         = "${var.region}"
   resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.bootstrap.id}"]
@@ -67,7 +67,7 @@ resource "azurerm_virtual_machine" "bootstrap" {
   }
 
   storage_os_disk {
-    name              = "bootstrap-os-disk"
+    name              = "${var.bootstrap_name_prefix}-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "StandardSSD_LRS"
@@ -82,7 +82,7 @@ resource "azurerm_virtual_machine" "bootstrap" {
   }
 
   os_profile {
-    computer_name  = "bootstrap"
+    computer_name  = "${var.bootstrap_name_prefix}"
     admin_username = "${var.os_username}"
   }
 

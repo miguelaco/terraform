@@ -1,6 +1,6 @@
 locals {
-  private_key = "${file("./secrets/${var.cluster_id}")}"
-  public_key  = "${file("./secrets/${var.cluster_id}.pub")}"
+  private_key = "${file("./secrets/key")}"
+  public_key  = "${file("./secrets/key.pub")}"
 }
 
 resource "azurerm_resource_group" "rg" {

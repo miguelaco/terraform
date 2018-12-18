@@ -1,6 +1,6 @@
 resource "azurerm_managed_disk" "private_agent" {
   count                = "${var.num_of_private_agents}"
-  name                 = "private-agent-${count.index + 1}-managed-disk"
+  name                 = "${var.private_agent_name_prefix}${count.index + 1}-managed-disk"
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   storage_account_type = "StandardSSD_LRS"
@@ -10,13 +10,13 @@ resource "azurerm_managed_disk" "private_agent" {
 
 resource "azurerm_network_interface" "private_agent" {
   count                = "${var.num_of_private_agents}"
-  name                 = "private-agent-${count.index + 1}-nic"
+  name                 = "${var.private_agent_name_prefix}${count.index + 1}-nic"
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   enable_ip_forwarding = true
 
   ip_configuration {
-    name                          = "private-agent-${count.index + 1}-ip-config"
+    name                          = "${var.private_agent_name_prefix}${count.index + 1}-ip-config"
     subnet_id                     = "${azurerm_subnet.subnet.id}"
     private_ip_address_allocation = "dynamic"
   }
@@ -24,7 +24,7 @@ resource "azurerm_network_interface" "private_agent" {
 
 resource "azurerm_virtual_machine" "private_agent" {
   count                            = "${var.num_of_private_agents}"
-  name                             = "private-agent-${count.index + 1}"
+  name                             = "${var.private_agent_name_prefix}${count.index + 1}"
   location                         = "${var.region}"
   resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.private_agent.*.id[count.index]}"]
@@ -40,7 +40,7 @@ resource "azurerm_virtual_machine" "private_agent" {
   }
 
   storage_os_disk {
-    name              = "private-agent-${count.index + 1}-os-disk"
+    name              = "${var.private_agent_name_prefix}${count.index + 1}-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "StandardSSD_LRS"
@@ -55,7 +55,7 @@ resource "azurerm_virtual_machine" "private_agent" {
   }
 
   os_profile {
-    computer_name  = "private-agent-${count.index + 1}"
+    computer_name  = "${var.private_agent_name_prefix}${count.index + 1}"
     admin_username = "${var.os_username}"
   }
 

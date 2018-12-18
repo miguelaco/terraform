@@ -1,6 +1,6 @@
 resource "azurerm_managed_disk" "master" {
   count                = "${var.num_of_masters}"
-  name                 = "master-${count.index + 1}-managed-disk"
+  name                 = "${var.master_name_prefix}${count.index + 1}-managed-disk"
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   storage_account_type = "StandardSSD_LRS"
@@ -10,13 +10,13 @@ resource "azurerm_managed_disk" "master" {
 
 resource "azurerm_network_interface" "master" {
   count                = "${var.num_of_masters}"
-  name                 = "master-${count.index + 1}-nic"
+  name                 = "${var.master_name_prefix}${count.index + 1}-nic"
   location             = "${var.region}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   enable_ip_forwarding = true
 
   ip_configuration {
-    name                          = "master-${count.index + 1}-ip-config"
+    name                          = "${var.master_name_prefix}${count.index + 1}-ip-config"
     subnet_id                     = "${azurerm_subnet.subnet.id}"
     private_ip_address_allocation = "dynamic"
   }
@@ -25,13 +25,13 @@ resource "azurerm_network_interface" "master" {
 resource "azurerm_network_interface_backend_address_pool_association" "master_nic_backend_pool" {
   count                   = "${var.num_of_masters}"
   network_interface_id    = "${azurerm_network_interface.master.*.id[count.index]}"
-  ip_configuration_name   = "master-${count.index + 1}-ip-config"
+  ip_configuration_name   = "${var.master_name_prefix}${count.index + 1}-ip-config"
   backend_address_pool_id = "${azurerm_lb_backend_address_pool.master_backend_pool.id}"
 }
 
 resource "azurerm_virtual_machine" "master" {
   count                            = "${var.num_of_masters}"
-  name                             = "master-${count.index + 1}"
+  name                             = "${var.master_name_prefix}${count.index + 1}"
   location                         = "${var.region}"
   resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.master.*.id[count.index]}"]
@@ -47,7 +47,7 @@ resource "azurerm_virtual_machine" "master" {
   }
 
   storage_os_disk {
-    name              = "master-${count.index + 1}-os-disk"
+    name              = "${var.master_name_prefix}${count.index + 1}-os-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "StandardSSD_LRS"
@@ -62,7 +62,7 @@ resource "azurerm_virtual_machine" "master" {
   }
 
   os_profile {
-    computer_name  = "master-${count.index + 1}"
+    computer_name  = "${var.master_name_prefix}${count.index + 1}"
     admin_username = "${var.os_username}"
   }
 

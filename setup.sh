@@ -18,7 +18,6 @@ DEFAULT_PUBLIC_AGENT_INSTANCE_TYPE=Standard_D2s_v3
 DEFAULT_PRIVATE_AGENT_INSTANCE_TYPE=Standard_D4s_v3
 
 RESOURCE_GROUP_NAME=terraform
-STORAGE_ACCOUNT_NAME=stratio$RANDOM
 CONTAINER_NAME=tfstate
 
 #while read -p 'Enter something: ' TEST && [[ -z "$TEST" ]] ; do
@@ -32,7 +31,7 @@ function setup_state_backend {
 		if [ ! $RESET_BACKEND ]
 		then
 			echo "Backend already initialized, ${bold}backend.tf${normal} exists"
-			return 1
+			return 0
 		fi
 	fi
 
@@ -42,6 +41,11 @@ function setup_state_backend {
 		return 1
 	fi
 	echo "Resource group $RESOURCE_GROUP_NAME created"
+
+	TENANT_ID=$(az account show --query tenantId -o tsv)
+	echo $TENANT_ID
+	STORAGE_ACCOUNT_NAME=$(echo $TENANT_ID | md5sum | cut -f1 -d " " | cut -c1-24)
+	echo $STORAGE_ACCOUNT_NAME
 
 	az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob > /dev/null
 	if [ $? -ne 0 ]
@@ -85,7 +89,7 @@ function setup_configuration {
 		if [ ! $RESET_CONFIG ]
 		then
 			echo "Configuration already initialized, ${bold}terraform.tfvars${normal} exists"
-			return 1
+			return 0
 		fi
 	fi
 
@@ -133,27 +137,44 @@ function generate_ssh_keypair {
 	echo "---------------------------------------------"
 	mkdir -p ./secrets
 	ssh-keygen -q -f ./secrets/key -t rsa -N '' -C key
+	return 0
 }
 
 echo "---------------------------------------------"
 echo " Setup state backend"
 echo "---------------------------------------------"
 setup_state_backend
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
 
 echo "---------------------------------------------"
 echo " Setup configuration"
 echo "---------------------------------------------"
 setup_configuration
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
 
 echo "---------------------------------------------"
 echo " Generate SSH keypair"
 echo "---------------------------------------------"
 generate_ssh_keypair
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
 
 echo "---------------------------------------------"
 echo " Terraform init"
 echo "---------------------------------------------"
 terraform init
+if [ $? -ne 0 ]
+then
+	exit 1
+fi
 
 echo "---------------------------------------------"
 echo "Successfully initialized, you can further customize your infrastructure editing terraform.tfvars"
