@@ -43,9 +43,7 @@ function setup_state_backend {
 	echo "Resource group $RESOURCE_GROUP_NAME created"
 
 	TENANT_ID=$(az account show --query tenantId -o tsv)
-	echo $TENANT_ID
 	STORAGE_ACCOUNT_NAME=$(echo $TENANT_ID | md5sum | cut -f1 -d " " | cut -c1-24)
-	echo $STORAGE_ACCOUNT_NAME
 
 	az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob > /dev/null
 	if [ $? -ne 0 ]
