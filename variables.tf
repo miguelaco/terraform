@@ -67,17 +67,12 @@ variable "num_of_hdfs" {
   default     = 1
 }
 
-#variable "ip-detect" {
-# description = "Used to determine the private IP address of instances"
-# type = "map"
-#
-# default = {
-#  aws   = "scripts/cloud/aws/ip-detect.aws.sh"
-#  azure = "scripts/cloud/azure/ip-detect.azure.sh"
-# }
-#}
-
 variable "instance_disk_size" {
+  description = "Default size of the root disk (GB)"
+  default     = "50"
+}
+
+variable "private_agent_disk_size" {
   description = "Default size of the root disk (GB)"
   default     = "128"
 }

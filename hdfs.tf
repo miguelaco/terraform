@@ -22,6 +22,15 @@ resource "azurerm_network_interface" "hdfs" {
   }
 }
 
+resource "azurerm_availability_set" "hdfs" {
+  name                         = "${var.hdfs_name_prefix}-as"
+  location                     = "${var.region}"
+  resource_group_name          = "${azurerm_resource_group.rg.name}"
+  platform_fault_domain_count  = 3
+  platform_update_domain_count = 1
+  managed                      = true
+}
+
 resource "azurerm_virtual_machine" "hdfs" {
   count                            = "${var.num_of_hdfs}"
   name                             = "${var.hdfs_name_prefix}${count.index + 1}"
@@ -29,6 +38,7 @@ resource "azurerm_virtual_machine" "hdfs" {
   resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.hdfs.*.id[count.index]}"]
   vm_size                          = "${var.hdfs_instance_type}"
+  availability_set_id              = "${azurerm_availability_set.hdfs.id}"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 

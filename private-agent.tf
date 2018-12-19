@@ -5,7 +5,7 @@ resource "azurerm_managed_disk" "private_agent" {
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   storage_account_type = "StandardSSD_LRS"
   create_option        = "Empty"
-  disk_size_gb         = "${var.instance_disk_size}"
+  disk_size_gb         = "${var.private_agent_disk_size}"
 }
 
 resource "azurerm_network_interface" "private_agent" {
@@ -22,6 +22,15 @@ resource "azurerm_network_interface" "private_agent" {
   }
 }
 
+resource "azurerm_availability_set" "private_agent" {
+  name                         = "${var.private_agent_name_prefix}-as"
+  location                     = "${var.region}"
+  resource_group_name          = "${azurerm_resource_group.rg.name}"
+  platform_fault_domain_count  = 3
+  platform_update_domain_count = 1
+  managed                      = true
+}
+
 resource "azurerm_virtual_machine" "private_agent" {
   count                            = "${var.num_of_private_agents}"
   name                             = "${var.private_agent_name_prefix}${count.index + 1}"
@@ -29,6 +38,7 @@ resource "azurerm_virtual_machine" "private_agent" {
   resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.private_agent.*.id[count.index]}"]
   vm_size                          = "${var.private_agent_instance_type}"
+  availability_set_id              = "${azurerm_availability_set.private_agent.id}"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 

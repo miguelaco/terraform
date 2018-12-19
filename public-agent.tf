@@ -29,6 +29,15 @@ resource "azurerm_network_interface_backend_address_pool_association" "public_ag
   backend_address_pool_id = "${azurerm_lb_backend_address_pool.public_agent_backend_pool.id}"
 }
 
+resource "azurerm_availability_set" "public_agent" {
+  name                         = "${var.public_agent_name_prefix}-as"
+  location                     = "${var.region}"
+  resource_group_name          = "${azurerm_resource_group.rg.name}"
+  platform_fault_domain_count  = 3
+  platform_update_domain_count = 1
+  managed                      = true
+}
+
 resource "azurerm_virtual_machine" "public_agent" {
   count                            = "${var.num_of_public_agents}"
   name                             = "${var.public_agent_name_prefix}${count.index + 1}"
@@ -36,6 +45,7 @@ resource "azurerm_virtual_machine" "public_agent" {
   resource_group_name              = "${azurerm_resource_group.rg.name}"
   network_interface_ids            = ["${azurerm_network_interface.public_agent.*.id[count.index]}"]
   vm_size                          = "${var.public_agent_instance_type}"
+  availability_set_id              = "${azurerm_availability_set.public_agent.id}"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
 
