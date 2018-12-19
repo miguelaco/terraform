@@ -35,37 +35,19 @@ function setup_state_backend {
 		fi
 	fi
 
-	az group create --name $RESOURCE_GROUP_NAME --location westeurope > /dev/null
-	if [ $? -ne 0 ]
-	then
-		return 1
-	fi
+	az group create --name $RESOURCE_GROUP_NAME --location westeurope > /dev/null || return 1
 	echo "Resource group $RESOURCE_GROUP_NAME created"
 
 	TENANT_ID=$(az account show --query tenantId -o tsv)
 	STORAGE_ACCOUNT_NAME=$(echo $TENANT_ID | md5sum | cut -f1 -d " " | cut -c1-24)
 
-	az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob > /dev/null
-	if [ $? -ne 0 ]
-	then
-		return 1
-	fi
+	az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob > /dev/null || return 1
 	echo "Storage account $STORAGE_ACCOUNT_NAME created"
 
-	ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
-	if [ $? -ne 0 ]
-	then
-		return 1
-	fi
+	ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv) || return 1
 
-	az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --account-key $ACCOUNT_KEY > /dev/null
-	if [ $? -ne 0 ]
-	then
-		return 1
-	fi
+	az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --account-key $ACCOUNT_KEY > /dev/null || return 1
 	echo "Container $CONTAINER_NAME created"
-
-	export ACCOUNT_KEY
 
 	cat <<-EOS > ./backend.tf
 		terraform {
@@ -73,7 +55,7 @@ function setup_state_backend {
 		    resource_group_name  = "$RESOURCE_GROUP_NAME"
 		    storage_account_name = "$STORAGE_ACCOUNT_NAME"
 		    container_name       = "$CONTAINER_NAME"
-		    key                  = "tfstate"
+		    key                  = "$CLUSTER_ID"
 		    access_key           = "$ACCOUNT_KEY"
 		  }
 		}
@@ -82,13 +64,11 @@ function setup_state_backend {
 }
 
 function setup_configuration {
-	if [ -f ./terraform.tfvars ]
+	if [ -f ./terraform.tfvars ] && [ ! $RESET_CONFIG ]
 	then
-		if [ ! $RESET_CONFIG ]
-		then
-			echo "Configuration already initialized, ${bold}terraform.tfvars${normal} exists"
-			return 0
-		fi
+		echo "Configuration already initialized, ${bold}terraform.tfvars${normal} exists"
+		CLUSTER_ID=$(grep cluster_id terraform.tfvars | cut -f2 -d "=" | tr -d "\" ")
+		return 0
 	fi
 
 	read -p "Enter your ${bold}cluster name${normal}: " CLUSTER_ID
@@ -132,47 +112,34 @@ function setup_configuration {
 }
 
 function generate_ssh_keypair {
-	echo "---------------------------------------------"
 	mkdir -p ./secrets
 	ssh-keygen -q -f ./secrets/key -t rsa -N '' -C key
 	return 0
 }
 
-echo "---------------------------------------------"
-echo " Setup state backend"
-echo "---------------------------------------------"
-setup_state_backend
-if [ $? -ne 0 ]
-then
-	exit 1
-fi
-
+echo ""
 echo "---------------------------------------------"
 echo " Setup configuration"
 echo "---------------------------------------------"
-setup_configuration
-if [ $? -ne 0 ]
-then
-	exit 1
-fi
+setup_configuration || exit 1
 
+echo "---------------------------------------------"
+echo " Setup state backend"
+echo "---------------------------------------------"
+setup_state_backend || exit 1
+
+echo ""
 echo "---------------------------------------------"
 echo " Generate SSH keypair"
 echo "---------------------------------------------"
-generate_ssh_keypair
-if [ $? -ne 0 ]
-then
-	exit 1
-fi
+generate_ssh_keypair || exit 1
 
+echo ""
 echo "---------------------------------------------"
 echo " Terraform init"
 echo "---------------------------------------------"
-terraform init
-if [ $? -ne 0 ]
-then
-	exit 1
-fi
+terraform init || exit 1
 
+echo ""
 echo "---------------------------------------------"
 echo "Successfully initialized, you can further customize your infrastructure editing terraform.tfvars"
