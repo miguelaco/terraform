@@ -10,17 +10,23 @@ resource "azurerm_resource_group" "rg" {
 
 resource "azurerm_virtual_network" "vnet" {
   name                = "vnet"
+  count               = "${var.subnet_id != "" ? 0 : 1}"
   address_space       = ["10.32.0.0/16"]
   location            = "${var.region}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
 }
 
 resource "azurerm_subnet" "subnet" {
+  count                = "${var.subnet_id != "" ? 0 : 1}"
   name                 = "subnet"
   address_prefix       = "10.32.0.0/22"
   virtual_network_name = "${azurerm_virtual_network.vnet.name}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   route_table_id       = "${azurerm_route_table.route_table.id}"
+}
+
+locals {
+  subnet_id = "${var.subnet_id != "" ? var.subnet_id : element(concat(azurerm_subnet.subnet.*.id, list("")), 0)}"
 }
 
 resource "azurerm_route_table" "route_table" {
@@ -30,6 +36,6 @@ resource "azurerm_route_table" "route_table" {
 }
 
 resource "azurerm_subnet_route_table_association" "subnet_route_table" {
-  subnet_id      = "${azurerm_subnet.subnet.id}"
+  subnet_id      = "${local.subnet_id}"
   route_table_id = "${azurerm_route_table.route_table.id}"
 }

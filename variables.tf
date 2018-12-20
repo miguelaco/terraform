@@ -106,3 +106,8 @@ variable "hdfs_name_prefix" {
   description = "HDFS name prefix"
   default     = "hdfs"
 }
+
+variable "subnet_id" {
+  description = "Subnet you want to use if already created"
+  default     = ""
+}

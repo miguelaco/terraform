@@ -44,7 +44,7 @@ resource "azurerm_network_interface" "bootstrap" {
 
   ip_configuration {
     name                          = "${var.bootstrap_name_prefix}-ip-config"
-    subnet_id                     = "${azurerm_subnet.subnet.id}"
+    subnet_id                     = "${local.subnet_id}"
     private_ip_address_allocation = "dynamic"
     public_ip_address_id          = "${azurerm_public_ip.bootstrap.id}"
   }

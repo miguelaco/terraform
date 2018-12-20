@@ -17,7 +17,7 @@ resource "azurerm_network_interface" "gosec" {
 
   ip_configuration {
     name                          = "${var.gosec_name_prefix}${count.index + 1}-ip-config"
-    subnet_id                     = "${azurerm_subnet.subnet.id}"
+    subnet_id                     = "${local.subnet_id}"
     private_ip_address_allocation = "dynamic"
   }
 }
