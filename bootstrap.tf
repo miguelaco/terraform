@@ -16,7 +16,7 @@ resource "azurerm_public_ip" "bootstrap" {
 }
 
 resource "azurerm_network_security_group" "bootstrap" {
-  name                = "security-group-bootstrap"
+  name                = "${var.bootstrap_name_prefix}-security-group"
   location            = "${var.region}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
 }

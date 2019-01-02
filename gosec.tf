@@ -8,12 +8,19 @@ resource "azurerm_managed_disk" "gosec" {
   disk_size_gb         = "${var.instance_disk_size}"
 }
 
+resource "azurerm_network_security_group" "gosec" {
+  name                = "${var.gosec_name_prefix}-security-group"
+  location            = "${var.region}"
+  resource_group_name = "${azurerm_resource_group.rg.name}"
+}
+
 resource "azurerm_network_interface" "gosec" {
-  count                = "${var.num_of_gosecs}"
-  name                 = "${var.gosec_name_prefix}${count.index + 1}-nic"
-  location             = "${var.region}"
-  resource_group_name  = "${azurerm_resource_group.rg.name}"
-  enable_ip_forwarding = true
+  count                     = "${var.num_of_gosecs}"
+  name                      = "${var.gosec_name_prefix}${count.index + 1}-nic"
+  location                  = "${var.region}"
+  resource_group_name       = "${azurerm_resource_group.rg.name}"
+  network_security_group_id = "${azurerm_network_security_group.gosec.id}"
+  enable_ip_forwarding      = true
 
   ip_configuration {
     name                          = "${var.gosec_name_prefix}${count.index + 1}-ip-config"
@@ -86,7 +93,7 @@ resource "azurerm_virtual_machine" "gosec" {
       type         = "ssh"
       user         = "${var.os_username}"
       host         = "${element(azurerm_network_interface.gosec.*.private_ip_address, count.index)}"
-      bastion_host = "${azurerm_public_ip.bootstrap.fqdn}"
+      bastion_host = "${azurerm_public_ip.gosec.fqdn}"
       private_key  = "${local.private_key}"
     }
   }
@@ -101,7 +108,7 @@ resource "azurerm_virtual_machine" "gosec" {
       type         = "ssh"
       user         = "${var.os_username}"
       host         = "${element(azurerm_network_interface.gosec.*.private_ip_address, count.index)}"
-      bastion_host = "${azurerm_public_ip.bootstrap.fqdn}"
+      bastion_host = "${azurerm_public_ip.gosec.fqdn}"
       private_key  = "${local.private_key}"
     }
   }

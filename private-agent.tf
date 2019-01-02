@@ -8,12 +8,19 @@ resource "azurerm_managed_disk" "private_agent" {
   disk_size_gb         = "${var.private_agent_disk_size}"
 }
 
+resource "azurerm_network_security_group" "private_agent" {
+  name                = "${var.private_agent_name_prefix}-security-group"
+  location            = "${var.region}"
+  resource_group_name = "${azurerm_resource_group.rg.name}"
+}
+
 resource "azurerm_network_interface" "private_agent" {
-  count                = "${var.num_of_private_agents}"
-  name                 = "${var.private_agent_name_prefix}${count.index + 1}-nic"
-  location             = "${var.region}"
-  resource_group_name  = "${azurerm_resource_group.rg.name}"
-  enable_ip_forwarding = true
+  count                     = "${var.num_of_private_agents}"
+  name                      = "${var.private_agent_name_prefix}${count.index + 1}-nic"
+  location                  = "${var.region}"
+  resource_group_name       = "${azurerm_resource_group.rg.name}"
+  network_security_group_id = "${azurerm_network_security_group.private_agent.id}"
+  enable_ip_forwarding      = true
 
   ip_configuration {
     name                          = "${var.private_agent_name_prefix}${count.index + 1}-ip-config"
