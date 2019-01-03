@@ -11,7 +11,7 @@ resource "azurerm_resource_group" "rg" {
 resource "azurerm_virtual_network" "vnet" {
   name                = "vnet"
   count               = "${var.subnet_id != "" ? 0 : 1}"
-  address_space       = ["10.32.0.0/16"]
+  address_space       = ["${var.vnet_address_range}"]
   location            = "${var.region}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
 }
@@ -19,7 +19,7 @@ resource "azurerm_virtual_network" "vnet" {
 resource "azurerm_subnet" "subnet" {
   count                = "${var.subnet_id != "" ? 0 : 1}"
   name                 = "subnet"
-  address_prefix       = "10.32.0.0/22"
+  address_prefix       = "${var.subnet_address_range}"
   virtual_network_name = "${azurerm_virtual_network.vnet.name}"
   resource_group_name  = "${azurerm_resource_group.rg.name}"
   route_table_id       = "${azurerm_route_table.route_table.id}"

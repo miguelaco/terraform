@@ -111,3 +111,13 @@ variable "subnet_id" {
   description = "Subnet you want to use if already created"
   default     = ""
 }
+
+variable "subnet_address_range" {
+  description = "Subnet address range"
+  default     = "10.32.0.0/22"
+}
+
+variable "vnet_address_range" {
+  description = "Virtual network address range"
+  default     = "10.32.0.0/16"
+}
