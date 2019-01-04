@@ -7,14 +7,6 @@ resource "azurerm_managed_disk" "bootstrap" {
   disk_size_gb         = "${var.instance_disk_size}"
 }
 
-resource "azurerm_public_ip" "bootstrap" {
-  name                         = "${var.bootstrap_name_prefix}-public-ip"
-  location                     = "${var.region}"
-  resource_group_name          = "${azurerm_resource_group.rg.name}"
-  public_ip_address_allocation = "dynamic"
-  domain_name_label            = "bootstrap-${var.cluster_id}"
-}
-
 resource "azurerm_network_security_group" "bootstrap" {
   name                = "${var.bootstrap_name_prefix}-security-group"
   location            = "${var.region}"
@@ -35,7 +27,17 @@ resource "azurerm_network_security_rule" "allow-ssh-inbound" {
   network_security_group_name = "${azurerm_network_security_group.bootstrap.name}"
 }
 
-resource "azurerm_network_interface" "bootstrap" {
+resource "azurerm_public_ip" "bootstrap" {
+  count                        = "${var.bootstrap_public? 1 : 0}"
+  name                         = "${var.bootstrap_name_prefix}-public-ip"
+  location                     = "${var.region}"
+  resource_group_name          = "${azurerm_resource_group.rg.name}"
+  public_ip_address_allocation = "dynamic"
+  domain_name_label            = "bootstrap-${var.cluster_id}"
+}
+
+resource "azurerm_network_interface" "bootstrap_public" {
+  count                     = "${var.bootstrap_public? 1 : 0}"
   name                      = "${var.bootstrap_name_prefix}-nic"
   location                  = "${var.region}"
   resource_group_name       = "${azurerm_resource_group.rg.name}"
@@ -50,11 +52,31 @@ resource "azurerm_network_interface" "bootstrap" {
   }
 }
 
+resource "azurerm_network_interface" "bootstrap_private" {
+  count                     = "${var.bootstrap_public? 0 : 1}"
+  name                      = "${var.bootstrap_name_prefix}-nic"
+  location                  = "${var.region}"
+  resource_group_name       = "${azurerm_resource_group.rg.name}"
+  network_security_group_id = "${azurerm_network_security_group.bootstrap.id}"
+  enable_ip_forwarding      = true
+
+  ip_configuration {
+    name                          = "${var.bootstrap_name_prefix}-ip-config"
+    subnet_id                     = "${local.subnet_id}"
+    private_ip_address_allocation = "dynamic"
+  }
+}
+
+locals {
+  bootstrap_nic_id = "${var.bootstrap_public ? element(concat(azurerm_network_interface.bootstrap_public.*.id, list("")), 0) : element(concat(azurerm_network_interface.bootstrap_private.*.id, list("")), 0)}"
+  bootstrap_ip     = "${var.bootstrap_public ? element(concat(azurerm_public_ip.bootstrap.*.fqdn, list("")), 0) : element(concat(azurerm_network_interface.bootstrap_private.*.private_ip_address, list("")), 0)}"
+}
+
 resource "azurerm_virtual_machine" "bootstrap" {
   name                             = "${var.bootstrap_name_prefix}"
   location                         = "${var.region}"
   resource_group_name              = "${azurerm_resource_group.rg.name}"
-  network_interface_ids            = ["${azurerm_network_interface.bootstrap.id}"]
+  network_interface_ids            = ["${local.bootstrap_nic_id}"]
   vm_size                          = "${var.bootstrap_instance_type}"
   delete_os_disk_on_termination    = true
   delete_data_disks_on_termination = true
@@ -102,7 +124,7 @@ resource "azurerm_virtual_machine" "bootstrap" {
     connection {
       type        = "ssh"
       user        = "${var.os_username}"
-      host        = "${element(azurerm_public_ip.bootstrap.*.fqdn, count.index)}"
+      host        = "${local.bootstrap_ip}"
       private_key = "${local.private_key}"
     }
   }
@@ -116,7 +138,7 @@ resource "azurerm_virtual_machine" "bootstrap" {
     connection {
       type        = "ssh"
       user        = "${var.os_username}"
-      host        = "${element(azurerm_public_ip.bootstrap.*.fqdn, count.index)}"
+      host        = "${local.bootstrap_ip}"
       private_key = "${local.private_key}"
     }
   }

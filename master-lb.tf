@@ -1,4 +1,5 @@
 resource "azurerm_public_ip" "master_lb_public_ip" {
+  count                        = "${var.num_of_masters > 0 ? 1 : 0}"
   name                         = "master-lb-public-ip"
   location                     = "${var.region}"
   resource_group_name          = "${azurerm_resource_group.rg.name}"
@@ -7,6 +8,7 @@ resource "azurerm_public_ip" "master_lb_public_ip" {
 }
 
 resource "azurerm_lb" "master_lb" {
+  count               = "${var.num_of_masters > 0 ? 1 : 0}"
   name                = "master-lb"
   location            = "${var.region}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
@@ -18,12 +20,14 @@ resource "azurerm_lb" "master_lb" {
 }
 
 resource "azurerm_lb_backend_address_pool" "master_backend_pool" {
+  count               = "${var.num_of_masters > 0 ? 1 : 0}"
   name                = "master-backend-pool"
   resource_group_name = "${azurerm_resource_group.rg.name}"
   loadbalancer_id     = "${azurerm_lb.master_lb.id}"
 }
 
 resource "azurerm_lb_rule" "master_lb_https_rule" {
+  count                          = "${var.num_of_masters > 0 ? 1 : 0}"
   resource_group_name            = "${azurerm_resource_group.rg.name}"
   loadbalancer_id                = "${azurerm_lb.master_lb.id}"
   name                           = "https-rule"
@@ -38,6 +42,7 @@ resource "azurerm_lb_rule" "master_lb_https_rule" {
 }
 
 resource "azurerm_lb_rule" "master_lb_sso_rule" {
+  count                          = "${var.num_of_masters > 0 ? 1 : 0}"
   resource_group_name            = "${azurerm_resource_group.rg.name}"
   loadbalancer_id                = "${azurerm_lb.master_lb.id}"
   name                           = "sso-rule"
@@ -52,6 +57,7 @@ resource "azurerm_lb_rule" "master_lb_sso_rule" {
 }
 
 resource "azurerm_lb_probe" "master_lb_https_probe" {
+  count               = "${var.num_of_masters > 0 ? 1 : 0}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
   loadbalancer_id     = "${azurerm_lb.master_lb.id}"
   name                = "https-probe"
@@ -59,6 +65,7 @@ resource "azurerm_lb_probe" "master_lb_https_probe" {
 }
 
 resource "azurerm_lb_probe" "master_lb_sso_probe" {
+  count               = "${var.num_of_masters > 0 ? 1 : 0}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
   loadbalancer_id     = "${azurerm_lb.master_lb.id}"
   name                = "sso-probe"

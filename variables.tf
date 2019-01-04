@@ -121,3 +121,8 @@ variable "vnet_address_range" {
   description = "Virtual network address range"
   default     = "10.32.0.0/16"
 }
+
+variable "bootstrap_public" {
+  description = "Whether to provision public ip for bootstrap node"
+  default     = true
+}

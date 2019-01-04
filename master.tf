@@ -9,6 +9,7 @@ resource "azurerm_managed_disk" "master" {
 }
 
 resource "azurerm_network_security_group" "master" {
+  count               = "${var.num_of_masters > 0 ? 1 : 0}"
   name                = "${var.master_name_prefix}-security-group"
   location            = "${var.region}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
@@ -37,6 +38,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "master_ni
 }
 
 resource "azurerm_availability_set" "master" {
+  count                        = "${var.num_of_masters > 0 ? 1 : 0}"
   name                         = "${var.master_name_prefix}-as"
   location                     = "${var.region}"
   resource_group_name          = "${azurerm_resource_group.rg.name}"

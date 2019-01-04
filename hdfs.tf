@@ -9,6 +9,7 @@ resource "azurerm_managed_disk" "hdfs" {
 }
 
 resource "azurerm_network_security_group" "hdfs" {
+  count               = "${var.num_of_hdfs > 0 ? 1 : 0}"
   name                = "${var.hdfs_name_prefix}-security-group"
   location            = "${var.region}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
@@ -30,6 +31,7 @@ resource "azurerm_network_interface" "hdfs" {
 }
 
 resource "azurerm_availability_set" "hdfs" {
+  count                        = "${var.num_of_hdfs > 0 ? 1 : 0}"
   name                         = "${var.hdfs_name_prefix}-as"
   location                     = "${var.region}"
   resource_group_name          = "${azurerm_resource_group.rg.name}"

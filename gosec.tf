@@ -9,6 +9,7 @@ resource "azurerm_managed_disk" "gosec" {
 }
 
 resource "azurerm_network_security_group" "gosec" {
+  count               = "${var.num_of_gosecs > 0 ? 1 : 0}"
   name                = "${var.gosec_name_prefix}-security-group"
   location            = "${var.region}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
@@ -30,6 +31,7 @@ resource "azurerm_network_interface" "gosec" {
 }
 
 resource "azurerm_availability_set" "gosec" {
+  count                        = "${var.num_of_gosecs > 0 ? 1 : 0}"
   name                         = "${var.gosec_name_prefix}-as"
   location                     = "${var.region}"
   resource_group_name          = "${azurerm_resource_group.rg.name}"

@@ -9,6 +9,7 @@ resource "azurerm_managed_disk" "private_agent" {
 }
 
 resource "azurerm_network_security_group" "private_agent" {
+  count               = "${var.num_of_private_agents > 0 ? 1 : 0}"
   name                = "${var.private_agent_name_prefix}-security-group"
   location            = "${var.region}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
@@ -30,6 +31,7 @@ resource "azurerm_network_interface" "private_agent" {
 }
 
 resource "azurerm_availability_set" "private_agent" {
+  count                        = "${var.num_of_private_agents > 0 ? 1 : 0}"
   name                         = "${var.private_agent_name_prefix}-as"
   location                     = "${var.region}"
   resource_group_name          = "${azurerm_resource_group.rg.name}"

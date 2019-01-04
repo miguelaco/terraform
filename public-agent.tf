@@ -9,6 +9,7 @@ resource "azurerm_managed_disk" "public_agent" {
 }
 
 resource "azurerm_network_security_group" "public_agent" {
+  count               = "${var.num_of_public_agents > 0 ? 1 : 0}"
   name                = "${var.public_agent_name_prefix}-security-group"
   location            = "${var.region}"
   resource_group_name = "${azurerm_resource_group.rg.name}"
@@ -37,6 +38,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "public_ag
 }
 
 resource "azurerm_availability_set" "public_agent" {
+  count                        = "${var.num_of_public_agents > 0 ? 1 : 0}"
   name                         = "${var.public_agent_name_prefix}-as"
   location                     = "${var.region}"
   resource_group_name          = "${azurerm_resource_group.rg.name}"
